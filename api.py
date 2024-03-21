@@ -4,11 +4,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPAuthorizationCredentials
 from uuid import UUID, uuid4
 
-from fastapi_sessions.backends.implementations import InMemoryBackend
-from fastapi_sessions.session_verifier import SessionVerifier
-from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
-
-
 import CustomAPI
 import json
 import random

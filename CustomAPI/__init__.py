@@ -1,5 +1,3 @@
-from sqlalchemy.orm import Session
-
 from .schemas import API, User, Owners, Editors, Logins
 from .database import SessionLocal, engine, Base
 from .models import Api, User, Owner, Editor, Login
