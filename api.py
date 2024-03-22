@@ -89,16 +89,14 @@ async def root():
 @app.get("/start", response_class=HTMLResponse)
 async def start(user: CustomAPI.Login = Depends(authenticate_user)):
     banner = "<h3>Welcome {}</h3>".format(backend.get_user_name(user.user_id))
-    apilist = """<form method="post" action="/api/edit">"""
-    apilist += """<button type="submit" formaction="/api/delete">Delete</button>"""
-    optlist = "<select name='id'>"
+    apilist = """<form method="get"><button type="submit" formaction="/api/delete">Delete</button>"""
+    optlist = """<select name='id'>"""
     for relation in backend.fetch_api_list(user.user_id):
         api = backend.fetch_api(relation.api_id)
         optlist += """<option value="{0}">{1}</option>""".format(api.id, api.name)
     optlist += "</select>"
     apilist += optlist
-    apilist += """<button type="submit" formaction="/api/edit">Edit</button>"""
-    apilist += "</form>"
+    apilist += """</select><button type="submit" formaction="/api/edit">Edit</button></form>"""
     createform = api_form("create", "post", 0, "", "", "")
     return head + banner + apilist + createform + foot
 
@@ -151,8 +149,8 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(get_authenticated
 
 @app.post("/api/edit", response_class=HTMLResponse)
 async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, data: Annotated[str, Form()] or None, channel: Annotated[str, Form()] or None, session: CustomAPI.Login = Depends(get_authenticated_user_from_session_id)):
-    if id and not data and not name and not channel:
-        return RedirectResponse(url="/api/edit/{0}".format(id))
+    #if id and not data and not name and not channel:
+    #    return RedirectResponse(url="/api/edit/{0}".format(id))
 
     # id: int,  name: str or None, data: str or None, channel: str or None,
     if await backend.edit_api(id, name, data, channel):
@@ -161,8 +159,8 @@ async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()] or N
         return HTMLResponse(status_code=201, content=head + 'EDIT ERROR' + foot)
 
 
-@app.post("/api/delete", response_class=HTMLResponse)
-async def api_delete(id: Annotated[int, Form()], session: CustomAPI.Login = Depends(get_authenticated_user_from_session_id)):
+@app.get("/api/delete", response_class=HTMLResponse)
+async def api_delete(id:int, session: CustomAPI.Login = Depends(get_authenticated_user_from_session_id)):
     if not backend.is_owner(session.id, id):
         return HTMLResponse(status_code=403, content="Forbidden")
 
