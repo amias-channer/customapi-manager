@@ -48,7 +48,7 @@ def api_form(action, method, id, name, data, channel):
 
 
 def generate_link_to_api(api_id, channel):
-    tricky_string = '${customapi.se.amias.net'
+    tricky_string = '${customapi.api.amias.net'
     end_bracket = '}'
     return "{0}/api/{1}/{2}{3}".format(tricky_string, api_id, channel, end_bracket)
 
