@@ -95,6 +95,18 @@ class Backend:
         except:
             return False
 
+    async def edit_user(self, id: int, name: str, password: str) -> bool:
+        try:
+            user = self.db.query(User).filter(User.id == id).first()
+            if name:
+                user.name = name
+            if password:
+                user.password = password
+            self.db.commit()
+            return True
+        except:
+            return False
+
     async def create_user(self, name: str, password: str) -> bool:
         try:
             user = User(name=name, password=password)
@@ -121,6 +133,10 @@ class Backend:
         except:
             return False
 
+    def fetch_user_list(self) -> list[User]:
+        users = self.db.query(User).all()
+        return users
+
     def fetch_api_list(self, id: int) -> list[Api]:
         apis = self.db.query(Owner).filter(Owner.user_id == id).all()
         return apis
@@ -129,3 +145,6 @@ class Backend:
         api = self.db.query(Api).filter(Api.id == id).first()
         return api
 
+    def fetch_user(self, id: int) -> User:
+        user = self.db.query(User).filter(User.id == id).first()
+        return user
