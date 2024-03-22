@@ -18,6 +18,7 @@ head = """
 <style>
 body {
   font-family: helvetica, sans-serif;
+  font-size: 20px;
 }
 </style>
 <body>
@@ -187,6 +188,18 @@ async def api_delete(id: int, session: CustomAPI.Login = Depends(get_authenticat
         return HTMLResponse(status_code=404, content="Item not found")
 
 
+@app.get("/n/{n}", response_class=HTMLResponse)
+def name(n: str, r: int or None = None):
+    data = backend.fetch_api_by_name(n)
+    if data:
+        out = data.data
+        if r == 1:
+            out = random.choice(data.data.split(","))
+        return HTMLResponse(status_code=200, content=out)
+    else:
+        return HTTPException(status_code=404, detail="Item not found")
+
+
 @app.get("/api/{i}/{c}", response_model=None)
 def api(i: int, c: str, r: int or None = None,
         user_agent: str | None = Header(default=None),
@@ -220,14 +233,15 @@ def admin(session: CustomAPI.Login = Depends(is_admin_user)):
     </select>
     <button type="submit" formaction="/user/edit">Edit</button>    
     </form>
+    <br><br>
     <form method="post" action="/user/create">
     <table>
     <tr><td>User Name</td><td><input name="name"></td></tr>
     <tr><td>Password</td><td><input name="password"></td></tr>
     <tr><td colspan="2"><input type="submit" value="Create User"></td></tr>
     </table>
-    </form><br>
-    Sessions:<br>
+    </form>
+    <br><br>
     <table>
     """
     for login in backend.fetch_login_list():

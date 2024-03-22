@@ -133,6 +133,13 @@ class Backend:
         except:
             return False
 
+    def fetch_api_by_name(self, name: str) -> Api or False:
+        try:
+            api = self.db.query(Api).filter(Api.name == name).first()
+            return api
+        except:
+            return False
+
     def fetch_user_list(self) -> list[User]:
         users = self.db.query(User).all()
         return users

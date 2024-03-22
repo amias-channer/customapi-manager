@@ -14,7 +14,7 @@ what to store data in ?
     user: id, name, password
     owners: user_id, api_id
     editors: user_id, api_id
-
+    logins: user_id, session_id 
 apis:
 - create - makes a new api
 - edit - edits an existing api
