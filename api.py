@@ -203,8 +203,8 @@ def api(i: int, c: str, r: int or None = None,
     data = backend.fetch_api_data(i, c)
     if data:
         if r == 1:
-            return random.choice(data.split(","))
-        return data
+            data = random.choice(data.split(","))
+        return HTMLResponse(status_code=200, content=data)
     else:
         return HTTPException(status_code=404, detail="Item not found")
 
