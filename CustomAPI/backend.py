@@ -141,6 +141,14 @@ class Backend:
         apis = self.db.query(Owner).filter(Owner.user_id == id).all()
         return apis
 
+    def fetch_login_list(self) -> list[Login]:
+        logins = self.db.query(Login).all()
+        return logins
+
+    def fetch_login(self, session_id: str) -> Login:
+        login = self.db.query(Login).filter(Login.session_id == session_id).first()
+        return login
+
     def fetch_api(self, id: int) -> Api:
         api = self.db.query(Api).filter(Api.id == id).first()
         return api

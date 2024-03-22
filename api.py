@@ -226,8 +226,14 @@ def admin(session: CustomAPI.Login = Depends(is_admin_user)):
     <tr><td>Password</td><td><input name="password"></td></tr>
     <tr><td colspan="2"><input type="submit" value="Create User"></td></tr>
     </table>
-    </form>
+    </form><br>
+    Sessions:<br>
+    <table>
     """
+    for login in backend.fetch_login_list():
+        name = backend.get_user_name(login.user_id)
+        output += "<tr><td>{}</td><td>{}</td></tr>".format(name, login.session_id)
+    output += "</table><br><br>"
     return HTMLResponse(status_code=200, content=head + output + admin_foot)
 
 
