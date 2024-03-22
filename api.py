@@ -143,8 +143,10 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(get_authenticated
         return HTMLResponse(status_code=403, content="Forbidden")
 
     api = backend.fetch_api(id)
+    link = generate_link_to_api(api.id, api.channel)
+    link += "<br><br>"
     editform = api_form("edit", "post", api.id, api.name, api.data, api.channel)
-    return HTMLResponse(status_code=200, content=head + editform + foot)
+    return HTMLResponse(status_code=200, content=head + link + editform + foot)
 
 
 @app.post("/api/edit", response_class=HTMLResponse)
