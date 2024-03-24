@@ -56,7 +56,18 @@ class Backend:
         editor = self.db.query(Editor).filter(Editor.user_id == user_id, Editor.api_id == api_id).first()
         return editor is not None
 
-    async def create_api(self, name: str, data: str, channel: str, uid: int) -> int or False:
+    def change_editor(self, user_id: int, api_id: int) -> bool:
+        try:
+            old_editor = self.db.query(Editor).filter(Editor.api_id == api_id).first()
+            self.db.delete(old_editor)
+            editor = Editor(user_id=user_id, api_id=api_id)
+            self.db.add(editor)
+            self.db.commit()
+            return True
+        except:
+            return False
+
+    async def create_api(self, name: str, data: str, channel: str, uid: int, editor: int) -> int or False:
         try:
             api = Api(name=name, data=data, channel=channel)
             self.db.add(api)
@@ -64,6 +75,7 @@ class Backend:
             owner = Owner(user_id=uid, api_id=api.id)
             self.db.add(owner)
             self.db.commit()
+            self.change_editor(editor, api.id)
             return api.id
         except:
             return False
@@ -74,23 +86,25 @@ class Backend:
             self.db.delete(api)
             owner = self.db.query(Owner).filter(Owner.api_id == id).first()
             self.db.delete(owner)
-            #editor = self.db.query(Editor).filter(Editor.api_id == id).first()
-            #self.db.delete(editor)
+            editor = self.db.query(Editor).filter(Editor.api_id == id).first()
+            self.db.delete(editor)
             self.db.commit()
             return True
         except:
             return False
 
-    async def edit_api(self, id: int, name: str, data: str, channel: str) -> bool:
+    def edit_api(self, id: int, name: str, data: str, channel: str, editor: str) -> bool:
         try:
             api = self.db.query(Api).filter(Api.id == id).first()
-            if name:
+            if name and name != api.name:
                 api.name = name
-            if data:
+            if data and data != api.data:
                 api.data = data
-            if channel:
+            if channel and channel != api.channel:
                 api.channel = channel
             self.db.commit()
+            if editor and editor != self.is_editor(editor, id):
+                self.change_editor(editor, id)
             return True
         except:
             return False
@@ -163,3 +177,7 @@ class Backend:
     def fetch_user(self, id: int) -> User:
         user = self.db.query(User).filter(User.id == id).first()
         return user
+
+    def fetch_editor(self, api_id: int) -> Editor:
+        editor = self.db.query(Editor).filter(Editor.api_id == api_id).first()
+        return editor

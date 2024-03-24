@@ -22,8 +22,9 @@ body {
 }
 </style>
 <body>
-<h1>CustomAPI</h1>
-<p>CustomAPI system for providing data for streamelements customapi commands</p>
+<font size="+5"><b>CustomAPI</b></font><br>
+&nbsp;&nbsp;[ <a href="/logout">Logout</a> ] [ <a href="/start">APIs</a> ] [ <a href="/admin">Admin</a> ] 
+<br>
 """
 loginform = """
 <form action='/start' method=''>
@@ -31,11 +32,11 @@ loginform = """
     <input type= 'password' name='password'><br -->
     <input type='submit' value='Login'>
 </form>"""
-foot = """ -  <a href="/logout">Logout</a>  -  <a href="/start">Menu</a>  - </body></html>"""
+foot = """<font size='-6'><a href="https://amias.net/">Amias Channer© 2024 </a></font></body></html>"""
 admin_foot = """ -  <a href="/logout">Logout</a>  -  <a href="/admin">Admin</a>  -  <a href="/start">Menu</a>  - </body></html>"""
 
 
-def api_form(action, method, id, name, data, channel):
+def api_form(action, method, id, name, data, channel, editor):
     form = """
     <form action="/api/{0}" method="{5}">
     <input type="hidden" name="id" value="{1}">
@@ -43,8 +44,14 @@ def api_form(action, method, id, name, data, channel):
     <tr><td>API Name </td><td><input name="name" value="{2}"></td></tr>
     <tr><td>API Data </td><td><textarea name="data">{3}</textarea></td></tr>
     <tr><td>Channel</td><td><input name="channel" value="{4}"></td></tr>
-    <tr><td colspan="2" align="center"><input type="submit" value="{0}"></td></tr>
-    </table></form>""".format(action, id, name, data, channel, method)
+    <tr><td align="right"><input type="submit" value="{0}"></td><td>
+    <select name='editor'><option value="0">Select Editor</option>""".format(action, id, name, data, channel, method)
+    for user in backend.fetch_user_list():
+        if user.id == editor:
+            form += """<option value="{0}" selected>{1}</option>""".format(user.id, user.name)
+        else:
+            form += """<option value="{0}">{1}</option>""".format(user.id, user.name)
+    form += "</select></td></tr></table></form>"
     return form
 
 
@@ -97,8 +104,8 @@ async def root():
 
 @app.get("/start", response_class=HTMLResponse)
 async def start(user: CustomAPI.Login = Depends(authenticate_user)):
-    banner = "<h3>Welcome {}</h3>".format(backend.get_user_name(user.user_id))
-    apilist = """<form method="get"><button type="submit" formaction="/api/delete">Delete</button>"""
+    banner = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font size="+1">Welcome {}</font><br><br>""".format(backend.get_user_name(user.user_id))
+    apilist = """<form method="get">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type="submit" formaction="/api/delete">Delete</button>"""
     optlist = """<select name='id'>"""
     for relation in backend.fetch_api_list(user.user_id):
         api = backend.fetch_api(relation.api_id)
@@ -106,7 +113,7 @@ async def start(user: CustomAPI.Login = Depends(authenticate_user)):
     optlist += "</select>"
     apilist += optlist
     apilist += """</select><button type="submit" formaction="/api/edit">Edit</button></form>"""
-    createform = api_form("create", "post", 0, "", "", "")
+    createform = api_form("create", "post", 0, "", "", "", 0)
     return head + banner + apilist + createform + foot
 
 
@@ -139,40 +146,51 @@ async def logout(request: Request, response: Response, credentials: Annotated[HT
 
 @app.post("/api/create", response_class=HTMLResponse)
 async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()], channel: Annotated[str, Form()],
+                     editor: Annotated[int, Form()],
                      login: CustomAPI.Login = Depends(get_authenticated_user_from_session_id)):
     # name: str, data: str, channel: str,
-    api_id = await backend.create_api(name, data, channel, login.id)
+    api_id = await backend.create_api(name, data, channel, login.id, editor)
     if api_id:
         se_command = generate_link_to_api(api_id, channel)
         return HTMLResponse(status_code=200,
                             content="created {0} successfully <br><br> {1} <br><br> {2}".format(api_id, se_command,
                                                                                                 foot))
     else:
-        return HTMLResponse(status_code=201, detail=head + "Error making api" + foot)
+        return HTMLResponse(status_code=201, content=head + "Error making api" + foot)
 
 
 @app.get("/api/edit", response_class=HTMLResponse)
 async def api_edit(id: int, session: CustomAPI.Login = Depends(get_authenticated_user_from_session_id)):
-    if not backend.is_owner(session.id, id):
-        return HTMLResponse(status_code=403, content="Forbidden")
+    owner_id = backend.is_owner(session.id, id)
+    editor = backend.fetch_editor(id)
+
+    if not owner_id == session.id:
+        if editor and not editor.id == session.id:
+            return HTMLResponse(status_code=403, content="Forbidden")
 
     api = backend.fetch_api(id)
-    link = generate_link_to_api(api.id, api.channel)
-    link += "<br><br>"
-    editform = api_form("edit", "post", api.id, api.name, api.data, api.channel)
+    link = '<font size="-1"><br>' + generate_link_to_api(api.id, api.channel) + "<br></font>"
+    if editor:
+        editor_id = editor.user_id
+    else:
+        editor_id = 0
+    editform = api_form("edit", "post", api.id, api.name, api.data, api.channel, editor_id)
     return HTMLResponse(status_code=200, content=head + link + editform + foot)
 
 
 @app.post("/api/edit", response_class=HTMLResponse)
 async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()] or None,
                    data: Annotated[str, Form()] or None, channel: Annotated[str, Form()] or None,
+                   editor: Annotated[int, Form()] or None,
                    session: CustomAPI.Login = Depends(get_authenticated_user_from_session_id)):
     # if id and not data and not name and not channel:
     #    return RedirectResponse(url="/api/edit/{0}".format(id))
-
+    if not backend.is_owner(session.id, id) and not backend.is_editor(session.id, id):
+        return HTMLResponse(status_code=403, content="Forbidden")
     # id: int,  name: str or None, data: str or None, channel: str or None,
-    if await backend.edit_api(id, name, data, channel):
-        return HTMLResponse(status_code=200, content="edited {0} successfully <br> {1}".format(id, foot))
+    if backend.edit_api(id, name, data, channel, editor):
+        link = generate_link_to_api(id, channel)
+        return HTMLResponse(status_code=200, content="{3} edited {0} successfully <br><br> {2} <br><br> {1}".format(id, foot, link, head))
     else:
         return HTMLResponse(status_code=201, content=head + 'EDIT ERROR' + foot)
 
@@ -263,6 +281,13 @@ def edit_user(id: int, session: CustomAPI.Login = Depends(is_admin_user)):
     <tr><td colspan="2" align="center"><input type="submit" value="Edit"></td></tr>
     </table>
     </form>
+    <br><br>
+    <form method="get" action="/api/edit">
+    <select name='id'>"""
+    for relation in backend.fetch_api_list(id):
+        api = backend.fetch_api(relation.api_id)
+        output += """<option value="{0}">{1}</option>""".format(api.id, api.name)
+    output += """<input type="submit" value="edit"></select></form><br><br>
     """
     return HTMLResponse(status_code=200, content=head + output + admin_foot)
 
