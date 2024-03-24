@@ -65,7 +65,7 @@ loginform = """
     This is a private system , please ask Amias for a login.<br>
     <input type='submit' value='Login'>
 </form>"""
-foot = """<font size='-6'><a href="https://amias.net/">Amias Channer© 2024 </a></font></body></html>"""
+foot = """<br><br><font size='-6'><a href="https://amias.net/">Amias Channer© 2024 </a></font></body></html>"""
 
 
 def api_form(action, method, id, name, data, channel, editor):
@@ -98,7 +98,7 @@ def api_form(action, method, id, name, data, channel, editor):
 def generate_link_to_api(api_id, channel):
     tricky_string = '${customapi.api.amias.net'
     end_bracket = '}'
-    return "{0}/api/{1}/{2}{3}".format(tricky_string, api_id, channel, end_bracket)
+    return "{0}/a/{1}/{2}{3}".format(tricky_string, api_id, channel, end_bracket)
 
 
 def authenticate_user(request: Request, response: Response,
@@ -216,7 +216,8 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(get_authenticated
     else:
         editor_id = 0
     editform = api_form("edit", "post", api.id, api.name, api.data, api.channel, editor_id)
-    return HTMLResponse(status_code=200, content=head + link + editform + foot)
+    editform = "<br>" + editform
+    return HTMLResponse(status_code=200, content=head + editform + link + foot)
 
 
 @app.post("/api/edit", response_class=HTMLResponse)
@@ -261,6 +262,15 @@ def name(n: str, r: int or None = None):
         return HTTPException(status_code=404, detail="Item not found")
 
 
+@app.get("/r/{i}/{c}", response_model=None)
+@app.get("/random/{i}/{c}", response_model=None)
+def random(i: int, c: str, r: int = 1,
+           user_agent: str | None = Header(default=None),
+           http_x_streamelements_channel: str | None = Header(default=None)):
+    return api(i, c, r, user_agent, http_x_streamelements_channel)
+
+
+@app.get("/a/{i}/{c}", response_model=None)
 @app.get("/api/{i}/{c}", response_model=None)
 def api(i: int, c: str, r: int or None = None,
         user_agent: str | None = Header(default=None),
@@ -276,9 +286,12 @@ def api(i: int, c: str, r: int or None = None,
 
     data = backend.fetch_api_data(i, c)
     if data:
+        out = data
         if r == 1:
-            data = random.choice(data.split(","))
-        return HTMLResponse(status_code=200, content=data)
+            bits = data.split(",")
+            import random   # this import is here because some how random doesn't work without it
+            out = random.choice(bits)
+        return HTMLResponse(status_code=200, content=out)
     else:
         return HTTPException(status_code=404, detail="Item not found")
 
