@@ -33,7 +33,6 @@ loginform = """
     <input type='submit' value='Login'>
 </form>"""
 foot = """<font size='-6'><a href="https://amias.net/">Amias Channer© 2024 </a></font></body></html>"""
-admin_foot = """ -  <a href="/logout">Logout</a>  -  <a href="/admin">Admin</a>  -  <a href="/start">Menu</a>  - </body></html>"""
 
 
 def api_form(action, method, id, name, data, channel, editor):
@@ -41,9 +40,9 @@ def api_form(action, method, id, name, data, channel, editor):
     <form action="/api/{0}" method="{5}">
     <input type="hidden" name="id" value="{1}">
     <table>
-    <tr><td>API Name </td><td><input name="name" value="{2}"></td></tr>
-    <tr><td>API Data </td><td><textarea name="data">{3}</textarea></td></tr>
-    <tr><td>Channel</td><td><input name="channel" value="{4}"></td></tr>
+    <tr><td align="right">Name</td><td><input name="name" value="{2}"></td></tr>
+    <tr><td align="right">Data</td><td><textarea cols="21" name="data">{3}</textarea></td></tr>
+    <tr><td align="right">Channel</td><td><input name="channel" value="{4}"></td></tr>
     <tr><td align="right"><input type="submit" value="{0}"></td><td>
     <select name='editor'><option value="0">Select Editor</option>""".format(action, id, name, data, channel, method)
     for user in backend.fetch_user_list():
@@ -152,9 +151,9 @@ async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
     api_id = await backend.create_api(name, data, channel, login.id, editor)
     if api_id:
         se_command = generate_link_to_api(api_id, channel)
+        out = "created {0} successfully <br><br> {1} <br><br>".format(api_id, se_command)
         return HTMLResponse(status_code=200,
-                            content="created {0} successfully <br><br> {1} <br><br> {2}".format(api_id, se_command,
-                                                                                                foot))
+                            content=head + out + foot)
     else:
         return HTMLResponse(status_code=201, content=head + "Error making api" + foot)
 
@@ -201,7 +200,7 @@ async def api_delete(id: int, session: CustomAPI.Login = Depends(get_authenticat
         return HTMLResponse(status_code=403, content="Forbidden")
 
     if await backend.delete_api(id):
-        return HTMLResponse(status_code=200, content="Deleted {0} successfully <br> {1}".format(id, foot))
+        return HTMLResponse(status_code=200, content="{0} Deleted {1} successfully <br> {2}".format(head, id, foot))
     else:
         return HTMLResponse(status_code=404, content="Item not found")
 
@@ -243,6 +242,7 @@ def api(i: int, c: str, r: int or None = None,
 @app.get("/admin", response_class=HTMLResponse)
 def admin(session: CustomAPI.Login = Depends(is_admin_user)):
     output = """ <form method="get">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <button type="submit" formaction="/user/delete">Delete</button>
     <select name='id'>"""
     for user in backend.fetch_user_list():
@@ -266,7 +266,7 @@ def admin(session: CustomAPI.Login = Depends(is_admin_user)):
         name = backend.get_user_name(login.user_id)
         output += "<tr><td>{}</td><td>{}</td></tr>".format(name, login.session_id)
     output += "</table><br><br>"
-    return HTMLResponse(status_code=200, content=head + output + admin_foot)
+    return HTMLResponse(status_code=200, content=head + output + foot)
 
 
 @app.get("/user/edit", response_class=HTMLResponse)
@@ -289,14 +289,14 @@ def edit_user(id: int, session: CustomAPI.Login = Depends(is_admin_user)):
         output += """<option value="{0}">{1}</option>""".format(api.id, api.name)
     output += """<input type="submit" value="edit"></select></form><br><br>
     """
-    return HTMLResponse(status_code=200, content=head + output + admin_foot)
+    return HTMLResponse(status_code=200, content=head + output + foot)
 
 
 @app.post("/user/edit", response_model=None)
 def edit_user(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, password: Annotated[str, Form()],
               session: CustomAPI.Login = Depends(is_admin_user)):
     if backend.edit_user(id, name, password):
-        return HTMLResponse(status_code=200, content=head + "Edited {0} successfully <br> {1}".format(name, admin_foot))
+        return HTMLResponse(status_code=200, content=head + "Edited {0} successfully <br> {1}".format(name, foot))
     else:
         return HTTPException(status_code=500, detail="Internal server error")
 
@@ -305,17 +305,17 @@ def edit_user(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, 
 async def user_create(name: Annotated[str, Form()], password: Annotated[str, Form()],
                       session: CustomAPI.Login = Depends(is_admin_user)):
     if await backend.create_user(name, password):
-        return HTMLResponse(status_code=200, content=head + "Created {0} successfully <br> {1}".format(name, admin_foot))
+        return HTMLResponse(status_code=200, content=head + "<br><br> Created {0} successfully <br><br><br> {1}".format(name, foot))
     else:
         return HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/user/delete", response_model=None)
-async def user_delete(id: Annotated[int, Form()], session: CustomAPI.Login = Depends(is_admin_user)):
-    if id == session.user_id:
+@app.get("/user/delete", response_model=None)
+async def user_delete(id: int, session: CustomAPI.Login = Depends(is_admin_user)):
+    if id == session.id:
         return HTTPException(status_code=403, detail="Forbidden")
 
     if await backend.delete_user(id):
-        return HTMLResponse(status_code=200, content="Deleted {0} successfully <br> {1}".format(id, admin_foot))
+        return HTMLResponse(status_code=200, content=head + "<br><br> Deleted {0} successfully <br><br><br> {1}".format(id, foot))
     else:
         return HTTPException(status_code=404, detail="Item not found")
