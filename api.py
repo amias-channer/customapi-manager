@@ -12,6 +12,10 @@ app = FastAPI()
 backend = CustomAPI.Backend()
 security = HTTPBasic()
 
+regex = '\\r\\n|\\n|\\r'
+double_quote = '''"'''
+single_quote = "'"
+
 head = """
 <html>
 <head>
@@ -21,6 +25,36 @@ body {
   font-size: 20px;
 }
 </style>
+<script>
+function crToComma(){
+	var textarea = document.getElementById('data');
+    var content = textarea.value.replace(/(""" + regex + """)/gm, ',');
+	textarea.value = content;
+}
+
+function spacesToComma(){
+	var textarea = document.getElementById('data'); 
+    var content = textarea.value.replace(/(\s)/gm, ','); 
+    textarea.value = content;
+}
+function noSingleQuotes(){
+	var textarea = document.getElementById('data'); 
+    var content = textarea.value.replace(/(""" + single_quote + """)/gm, ''); 
+    textarea.value = content;
+}
+
+function noDoubleQuotes(){
+	var textarea = document.getElementById('data'); 
+    var content = textarea.value.replace(/(""" + double_quote + """)/gm, ''); 
+    textarea.value = content;
+}
+	
+function noDupes(){
+	var textarea = document.getElementById('data'); 
+    var content = textarea.value.replace(/(\W{2,})/gm, ''); 
+    textarea.value = content;
+}
+</script>
 <body>
 <font size="+5"><b>CustomAPI</b></font><br>
 &nbsp;&nbsp;[ <a href="/logout">Logout</a> ] [ <a href="/start">APIs</a> ] [ <a href="/admin">Admin</a> ] 
@@ -28,8 +62,7 @@ body {
 """
 loginform = """
 <form action='/start' method=''>
-    <!-- input name='username'><br>
-    <input type= 'password' name='password'><br -->
+    This is a private system , please ask Amias for a login.<br>
     <input type='submit' value='Login'>
 </form>"""
 foot = """<font size='-6'><a href="https://amias.net/">Amias Channer© 2024 </a></font></body></html>"""
@@ -40,17 +73,25 @@ def api_form(action, method, id, name, data, channel, editor):
     <form action="/api/{0}" method="{5}">
     <input type="hidden" name="id" value="{1}">
     <table>
-    <tr><td align="right">Name</td><td><input name="name" value="{2}"></td></tr>
-    <tr><td align="right">Data</td><td><textarea cols="21" name="data">{3}</textarea></td></tr>
-    <tr><td align="right">Channel</td><td><input name="channel" value="{4}"></td></tr>
-    <tr><td align="right"><input type="submit" value="{0}"></td><td>
+    <tr><td align="right">Name</td><td><input size="20" name="name" value="{2}">
+    <span align="right">
+    <button type="button" onclick="crToComma();return False" title="Replace the lines in the data with Commas">L</button>
+    <button type="button" onclick="spacesToComma()" title="Replace the spaces in the data with Commas">S</button>
+    <button type="button" onclick="noDupes()" title="Remove duplicated punctation">D</button>
+    <button type="button" onclick="noSingleQuotes()" title="Remove Single quotes from the data">'</button>
+    <button type="button" onclick="noDoubleQuotes()" title="Remove Double quotes from the data">"</button>
+    </span>
+    </td></tr>
+    <tr><td align="right">Data</td><td><textarea id="data" cols="27" name="data">{3}</textarea></td></tr>
+    <tr><td align="right">Channel</td><td><input size="20" name="channel" value="{4}">
+    <span align="right">
     <select name='editor'><option value="0">Select Editor</option>""".format(action, id, name, data, channel, method)
     for user in backend.fetch_user_list():
         if user.id == editor:
             form += """<option value="{0}" selected>{1}</option>""".format(user.id, user.name)
         else:
             form += """<option value="{0}">{1}</option>""".format(user.id, user.name)
-    form += "</select></td></tr></table></form>"
+    form += "</select><span></td></tr></td></tr><tr><td colspan='2' align='center'><input type='submit'></td><tr></table></form>"
     return form
 
 
@@ -103,7 +144,8 @@ async def root():
 
 @app.get("/start", response_class=HTMLResponse)
 async def start(user: CustomAPI.Login = Depends(authenticate_user)):
-    banner = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font size="+1">Welcome {}</font><br><br>""".format(backend.get_user_name(user.user_id))
+    banner = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font size="+1">Welcome {}</font><br><br>""".format(
+        backend.get_user_name(user.user_id))
     apilist = """<form method="get">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type="submit" formaction="/api/delete">Delete</button>"""
     optlist = """<select name='id'>"""
     for relation in backend.fetch_api_list(user.user_id):
@@ -189,7 +231,9 @@ async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()] or N
     # id: int,  name: str or None, data: str or None, channel: str or None,
     if backend.edit_api(id, name, data, channel, editor):
         link = generate_link_to_api(id, channel)
-        return HTMLResponse(status_code=200, content="{3} edited {0} successfully <br><br> {2} <br><br> {1}".format(id, foot, link, head))
+        return HTMLResponse(status_code=200,
+                            content="{0} edited {1} successfully <br><br> {2} <br><br> {3}".format(head, id, link,
+                                                                                                   foot))
     else:
         return HTMLResponse(status_code=201, content=head + 'EDIT ERROR' + foot)
 
@@ -305,7 +349,8 @@ def edit_user(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, 
 async def user_create(name: Annotated[str, Form()], password: Annotated[str, Form()],
                       session: CustomAPI.Login = Depends(is_admin_user)):
     if await backend.create_user(name, password):
-        return HTMLResponse(status_code=200, content=head + "<br><br> Created {0} successfully <br><br><br> {1}".format(name, foot))
+        return HTMLResponse(status_code=200,
+                            content=head + "<br><br> Created {0} successfully <br><br><br> {1}".format(name, foot))
     else:
         return HTTPException(status_code=500, detail="Internal server error")
 
@@ -316,6 +361,7 @@ async def user_delete(id: int, session: CustomAPI.Login = Depends(is_admin_user)
         return HTTPException(status_code=403, detail="Forbidden")
 
     if await backend.delete_user(id):
-        return HTMLResponse(status_code=200, content=head + "<br><br> Deleted {0} successfully <br><br><br> {1}".format(id, foot))
+        return HTMLResponse(status_code=200,
+                            content=head + "<br><br> Deleted {0} successfully <br><br><br> {1}".format(id, foot))
     else:
         return HTTPException(status_code=404, detail="Item not found")
