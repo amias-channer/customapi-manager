@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasic
 
 import CustomAPI
-from CustomAPI.Routers import user_router, api_router
+from Routers import user_router, api_router, api_form
 from CustomAPI.template import head, foot, loginform
 import random
 
@@ -32,8 +32,22 @@ async def start(user: CustomAPI.Login = Depends(CustomAPI.security.authenticate_
     optlist += "</select>"
     apilist += optlist
     apilist += """</select><button type="submit" formaction="/api/edit">Edit</button></form>"""
-    createform = CustomAPI.Routers.api.api_form("create", "post", 0, "", "", "", 0)
+    createform = api_form("create", "post", 0, "", "", "", 0)
     return head + banner + apilist + createform + foot
+
+
+@app.get("/{i}", response_class=HTMLResponse)
+def shortcut(i: int, c: str or None = None, http_x_streamelements_channel: str | None = Header(default=None)):
+    api = backend.fetch_api(i)
+    import random
+    out = random.choice(api.data.split(","))
+    if api.channel:
+        if http_x_streamelements_channel != api.channel:
+            return HTMLResponse(status_code=403, content="Incorrect Channel in Header")
+        if c:
+            if api.channel != c:
+                return HTMLResponse(status_code=403, content="Incorrect Channel")
+    return HTMLResponse(status_code=200, content=out)
 
 
 @app.get("/n/{n}", response_class=HTMLResponse)

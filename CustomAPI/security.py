@@ -41,6 +41,6 @@ def get_authenticated_user_from_session_id(request: Request):
 
 def is_admin_user(request: Request):
     user = get_authenticated_user_from_session_id(request)
-    if not user.name == "amias":
+    if not user.admin:
         raise HTTPException(status_code=403, detail="Forbidden")
     return user

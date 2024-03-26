@@ -41,14 +41,19 @@ function noDupes(){
     var content = textarea.value.replace(/(\W{2,})/gm, ''); 
     textarea.value = content;
 }
+
+function clearChannel(){
+    var channel = document.getElementById('channel');
+    channel.value = ' ';
+}
 </script>
 <body>
 <font size="+5"><b>CustomAPI</b></font><br>
 &nbsp;&nbsp;[ <a href="/logout">Logout</a> ] [ <a href="/start">APIs</a> ] [ <a href="/admin">Admin</a> ] 
-<br>
+<br><br>
 """
 loginform = """
-<form action='/start' method=''>
+<form action='/start' method='post'>
     This is a private system , please ask Amias for a login.<br>
     <input type='submit' value='Login'>
 </form>"""

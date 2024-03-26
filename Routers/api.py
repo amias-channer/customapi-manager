@@ -28,29 +28,38 @@ def api_form(action, method, id, name, data, channel, editor):
     <button type="button" onclick="noDoubleQuotes()" title="Remove Double quotes from the data">"</button>
     </span>
     </td></tr>
-    <tr><td align="right">Data</td><td><textarea id="data" cols="27" name="data">{3}</textarea></td></tr>
-    <tr><td align="right">Channel</td><td><input size="20" name="channel" value="{4}">
-    <span align="right">
-    <select name='editor'><option value="0">Select Editor</option>""".format(action, id, name, data, channel, method)
+    <tr><td align="right">Data</td><td><textarea id="data" cols="38" rows="10" name="data">{3}</textarea></td></tr>
+    <tr><td align="right">Channel</td><td><input size="20" id="channel" name="channel" value="{4}">
+    <button type="button" onclick="clearChannel()" title="Add a channel name to make this API available to only one channel,
+     or click X to leave it open and get shorter link">X</button> <td></tr>
+    <tr><td align="right">Editor</td><td><select name='editor'><option value="0">Select Editor</option>""".format(action, id, name, data, channel, method)
     for user in backend.fetch_user_list():
         if user.id == editor:
             form += """<option value="{0}" selected>{1}</option>""".format(user.id, user.name)
         else:
             form += """<option value="{0}">{1}</option>""".format(user.id, user.name)
-    form += "</select><span></td></tr></td></tr><tr><td colspan='2' align='center'><input type='submit'></td><tr></table></form>"
+    form += "</select></td></tr></td></tr><tr><td colspan='2' align='left'><br><input type='submit'></td><tr></table></form>"
     return form
 
 
-def generate_link_to_api(api_id, channel):
-    tricky_string = '${customapi.api.amias.net'
-    end_bracket = '}'
-    return "{0}/a/{1}/{2}{3}".format(tricky_string, api_id, channel, end_bracket)
+def generate_link_to_api(api_id, channel) -> str:
+
+    opening_string = '${customapi.api.amias.net'
+    closing_string = '}'
+    cout = ""
+    if channel:
+        cout += "?c=" + channel
+    out = """{0}/{1}{2}{3}""".format(opening_string, api_id, cout, closing_string)
+    api = backend.fetch_api(api_id)
+
+    return out
 
 
 @router.post("/api/create", response_class=HTMLResponse)
-async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()], channel: Annotated[str, Form()],
-                     editor: Annotated[int, Form()],
-                     login: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
+async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
+                     channel: Annotated[str, Form()] | None = '', editor: Annotated[int, Form()] | None = 0,
+                     login: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)
+                     ):
     # name: str, data: str, channel: str,
     api_id = await backend.create_api(name, data, channel, login.id, editor)
     if api_id:
@@ -83,15 +92,17 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.securit
 
 
 @router.post("/api/edit", response_class=HTMLResponse)
-async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()] or None,
-                   data: Annotated[str, Form()] or None, channel: Annotated[str, Form()] or None,
-                   editor: Annotated[int, Form()] or None,
+async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
+                   data: Annotated[str, Form()], channel: Annotated[str, Form(), None, ''],
+                   editor: Annotated[int, Form(), None, 0],
                    session: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
     # if id and not data and not name and not channel:
     #    return RedirectResponse(url="/api/edit/{0}".format(id))
     if not backend.is_owner(session.id, id) and not backend.is_editor(session.id, id):
         return HTMLResponse(status_code=403, content="Forbidden")
     # id: int,  name: str or None, data: str or None, channel: str or None,
+    if channel == ' ':
+        channel = ''
     if backend.edit_api(id, name, data, channel, editor):
         link = generate_link_to_api(id, channel)
         return HTMLResponse(status_code=200,

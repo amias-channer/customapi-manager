@@ -17,7 +17,7 @@ backend = CustomAPI.Backend()
 @router.get("/admin", response_class=HTMLResponse)
 def admin(session: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
     output = """ <form method="get">
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <button type="submit" formaction="/user/delete">Delete</button>
     <select name='id'>"""
     for user in backend.fetch_user_list():
@@ -26,15 +26,13 @@ def admin(session: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
     </select>
     <button type="submit" formaction="/user/edit">Edit</button>    
     </form>
-    <br><br>
     <form method="post" action="/user/create">
     <table>
     <tr><td>User Name</td><td><input name="name"></td></tr>
-    <tr><td>Password</td><td><input name="password"></td></tr>
+    <tr><td>Password</td><td><input type="password" name="password"></td></tr>
     <tr><td colspan="2"><input type="submit" value="Create User"></td></tr>
     </table>
     </form>
-    <br><br>
     <table>
     """
     for login in backend.fetch_login_list():
@@ -47,35 +45,48 @@ def admin(session: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
 @router.get("/user/edit", response_class=HTMLResponse)
 def edit_user(id: int, session: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
     user = backend.fetch_user(id)
-    output = f"""
+    output = """
     <form action="/user/edit" method="post">
     <table>
-    <tr><td>User Name</td><td><input name="name" value="{user.name}"></td></tr>
-    <tr><td>Password</td><td><input name="password" value="{user.password}"></td></tr>
-    <tr><td>Enabled</td><td>"""
-    if user.enabled:
-        output += """<input type="radio"" id="enabled" value="True" checked /><input type="radio"" id="enabled" value="False" />"""
-    else:
-        output += """<input type="radio"" id="enabled" value="True" /><input type="radio"" id="enabled" value="False" checked />"""
-    output += """</td></tr><tr><td><input type="hidden" name="id" value="{user.id}"></td></tr>
+    <tr><td>User Name</td><td><input name="name" value="{0}"></td></tr>
+    <tr><td>Password</td><td><input type="password" name="password" value="{1}"></td></tr>
+    <tr><td>Enabled</td><td><select name="enabled">
+    <option value="1" """
+    if user.enabled == True:
+        output += "selected"
+    output += """>True<option value="0" """
+    if user.enabled == False:
+        output += "selected"
+    output += ">False</option></select>"
+    output += """</td></tr><tr><td>Admin</td><td><select name="admin"><option value="1" """
+    if user.admin == True:
+        output += "selected"
+    output += """>True<option value="0" """
+    if user.admin == False:
+        output += "selected"
+    output += ">False</option></select></td></tr>"
+    output += """<tr><td><input type="hidden" name="id" value="{2}"></td></tr>
     <tr><td colspan="2" align="center"><input type="submit" value="Edit"></td></tr>
     </table>
     </form>
     <br><br>
     <form method="get" action="/api/edit">
     <select name='id'>"""
+    apioutput = ''
     for relation in backend.fetch_api_list(id):
         api = backend.fetch_api(relation.api_id)
-        output += """<option value="{0}">{1}</option>""".format(api.id, api.name)
-    output += """<input type="submit" value="edit"></select></form><br><br>
-    """
+        apioutput += """<option value="{0}">{1}</option>""".format(api.id, api.name)
+    output += apioutput + "</select>"
+    output += """<input type="submit" value="edit"></select></form><br><br>"""
+    output = output.format(user.name, user.password, user.id)
     return HTMLResponse(status_code=200, content=head + output + foot)
 
 
 @router.post("/user/edit", response_model=None)
 def edit_user(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, password: Annotated[str, Form()],
+              enabled: Annotated[bool, Form()] or None, admin: Annotated[bool, Form()] or None,
               session: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
-    if backend.edit_user(id, name, password):
+    if backend.edit_user(id, name, password, enabled, admin):
         return HTMLResponse(status_code=200, content=head + "Edited {0} successfully <br> {1}".format(name, foot))
     else:
         return HTTPException(status_code=500, detail="Internal server error")
@@ -112,7 +123,7 @@ async def whoami(user: CustomAPI.Login = Depends(CustomAPI.security.get_authenti
 async def wipe_session(response: Response):
     response.set_cookie("session_id", "")
     response.headers["Authorization"] = "None"
-    return head + "Session wiped <a href='/'>Login</a>"
+    return head + "Session wiped <br><br> <a href='/'>Login</a>"
 
 
 @router.get("/logout", response_class=HTMLResponse)

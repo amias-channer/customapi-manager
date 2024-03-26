@@ -8,7 +8,7 @@ class Backend:
         self.db: Backend = SessionLocal()
 
     def login(self, username: str, password: str, session_id: str) -> Login or False:
-        matching_user = self.db.query(User).filter(User.name == username, User.password == password).first()
+        matching_user = self.db.query(User).filter(User.name == username, User.password == password, User.enabled == 1).first()
         if matching_user:
             existing_login = self.db.query(Login).filter(Login.user_id == matching_user.id and Login.session_id == session_id).first()
             if not existing_login:
@@ -100,8 +100,7 @@ class Backend:
                 api.name = name
             if data and data != api.data:
                 api.data = data
-            if channel and channel != api.channel:
-                api.channel = channel
+            api.channel = channel
             self.db.commit()
             if editor and editor != self.is_editor(editor, id):
                 self.change_editor(editor, id)
@@ -109,17 +108,15 @@ class Backend:
         except:
             return False
 
-    async def edit_user(self, id: int, name: str, password: str, admin: bool, enabled: bool) -> bool:
+    def edit_user(self, id: int, name: str, password: str, admin: bool, enabled: bool) -> bool:
         try:
             user = self.db.query(User).filter(User.id == id).first()
             if name:
                 user.name = name
             if password:
                 user.password = password
-            if admin:
-                user.admin = admin
-            if enabled:
-                user.enabled = enabled
+            user.admin = admin
+            user.enabled = enabled
             self.db.commit()
             return True
         except:
