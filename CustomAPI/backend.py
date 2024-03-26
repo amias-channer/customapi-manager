@@ -109,13 +109,17 @@ class Backend:
         except:
             return False
 
-    async def edit_user(self, id: int, name: str, password: str) -> bool:
+    async def edit_user(self, id: int, name: str, password: str, admin: bool, enabled: bool) -> bool:
         try:
             user = self.db.query(User).filter(User.id == id).first()
             if name:
                 user.name = name
             if password:
                 user.password = password
+            if admin:
+                user.admin = admin
+            if enabled:
+                user.enabled = enabled
             self.db.commit()
             return True
         except:

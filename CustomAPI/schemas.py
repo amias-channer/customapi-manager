@@ -15,6 +15,8 @@ class User(BaseModel):
     id: int
     name: str
     password: str
+    admin: bool
+    enabled: bool
 
     class Config:
         orm_mode = True

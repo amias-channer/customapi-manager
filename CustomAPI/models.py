@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 
@@ -18,6 +18,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, index=True)
     password = Column(String, index=True)
+    admin = Column(Boolean, index=True)
+    enabled = Column(Boolean, index=True)
 
 
 class Login(Base):
