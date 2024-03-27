@@ -53,7 +53,7 @@ function clearChannel(){
 <br><br>
 """
 loginform = """
-<form action='/start' method='post'>
+<form action='/start' method='get'>
     This is a private system , please ask Amias for a login.<br>
     <input type='submit' value='Login'>
 </form>"""

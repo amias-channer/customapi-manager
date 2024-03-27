@@ -59,7 +59,8 @@ class Backend:
     def change_editor(self, user_id: int, api_id: int) -> bool:
         try:
             old_editor = self.db.query(Editor).filter(Editor.api_id == api_id).first()
-            self.db.delete(old_editor)
+            if old_editor:
+                self.db.delete(old_editor)
             editor = Editor(user_id=user_id, api_id=api_id)
             self.db.add(editor)
             self.db.commit()
@@ -102,7 +103,7 @@ class Backend:
                 api.data = data
             api.channel = channel
             self.db.commit()
-            if editor and editor != self.is_editor(editor, id):
+            if editor and editor != id:
                 self.change_editor(editor, id)
             return True
         except:

@@ -32,7 +32,7 @@ def api_form(action, method, id, name, data, channel, editor):
     <tr><td align="right">Channel</td><td><input size="20" id="channel" name="channel" value="{4}">
     <button type="button" onclick="clearChannel()" title="Add a channel name to make this API available to only one channel,
      or click X to leave it open and get shorter link">X</button> <td></tr>
-    <tr><td align="right">Editor</td><td><select name='editor'><option value="0">Select Editor</option>""".format(action, id, name, data, channel, method)
+    <tr><td align="right">Editor</td><td><select name='editor'><option value="0">No Editor</option>""".format(action, id, name, data, channel, method)
     for user in backend.fetch_user_list():
         if user.id == editor:
             form += """<option value="{0}" selected>{1}</option>""".format(user.id, user.name)
@@ -86,6 +86,9 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.securit
         editor_id = editor.user_id
     else:
         editor_id = 0
+    # the default value in the form is space because the form will send a None if its truly empty.
+    if api.channel == '':
+        api.channel = ' '
     editform = api_form("edit", "post", api.id, api.name, api.data, api.channel, editor_id)
     editform = "<br>" + editform
     return HTMLResponse(status_code=200, content=CustomAPI.template.head + editform + link + CustomAPI.template.foot)
@@ -93,7 +96,7 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.securit
 
 @router.post("/api/edit", response_class=HTMLResponse)
 async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
-                   data: Annotated[str, Form()], channel: Annotated[str, Form(), None, ''],
+                   data: Annotated[str, Form()], channel: Annotated[str, Form(), None, ' '],
                    editor: Annotated[int, Form(), None, 0],
                    session: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
     # if id and not data and not name and not channel:
@@ -105,9 +108,8 @@ async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
         channel = ''
     if backend.edit_api(id, name, data, channel, editor):
         link = generate_link_to_api(id, channel)
-        return HTMLResponse(status_code=200,
-                            content="{0} edited {1} successfully <br><br> {2} <br><br> {3}".format(CustomAPI.template.head, id, link,
-                                                                                                   CustomAPI.template.foot))
+        ret = """<br> <a href="/api/edit?id={0}">edit</a>ed <a href="/{0}">{0}</a> successfully <br><br> {1} <br><br> """.format(id, link)
+        return HTMLResponse(status_code=200, content=CustomAPI.template.head + ret + CustomAPI.template.foot)
     else:
         return HTMLResponse(status_code=201, content=CustomAPI.template.head + 'EDIT ERROR' + CustomAPI.template.foot)
 

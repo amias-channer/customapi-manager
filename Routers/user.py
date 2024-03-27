@@ -94,7 +94,10 @@ def edit_user(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, 
 
 @router.post("/user/create", response_model=None)
 async def user_create(name: Annotated[str, Form()], password: Annotated[str, Form()],
-                      session: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
+                      login: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
+    if not login.admin:
+        return HTTPException(status_code=403, detail="Forbidden")
+
     if await backend.create_user(name, password):
         return HTMLResponse(status_code=200,
                             content=head + "<br><br> Created {0} successfully <br><br><br> {1}".format(name, foot))
