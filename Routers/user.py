@@ -43,7 +43,7 @@ def admin(login: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
 
 
 @router.get("/user", response_class=HTMLResponse)
-def user(login: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
+def user(login: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)):
     user = backend.fetch_user(login.id)
     output = """
     <form action="/user/edit" method="post">
@@ -131,7 +131,7 @@ async def user_delete(id: int, user: CustomAPI.User = Depends(CustomAPI.security
 
 
 @router.get("/whoami", response_class=HTMLResponse)
-async def whoami(user: CustomAPI.User= Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
+async def whoami(user: CustomAPI.User= Depends(CustomAPI.security.is_loggedin_user)):
     return backend.get_user_name(user.id)
 
 
@@ -144,7 +144,7 @@ async def wipe_session(response: Response):
 
 @router.get("/logout", response_class=HTMLResponse)
 async def logout(request: Request, response: Response, credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasic)],
-                 user: CustomAPI.User = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
+                 user: CustomAPI.User = Depends(CustomAPI.security.is_loggedin_user)):
     session_id = request.cookies.get("session_id")
     if backend.logout(session_id):
         credentials.username = None

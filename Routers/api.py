@@ -60,7 +60,7 @@ def generate_link_to_api(api_id, channel) -> str:
 @router.post("/api/create", response_class=HTMLResponse)
 async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
                      channel: Annotated[str, Form()], editor: Annotated[int, Form()],
-                     login: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)
+                     login: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)
                      ):
     # name: str, data: str, channel: str,
     api_id = await backend.create_api(name, data, channel, login.id, editor)
@@ -74,7 +74,7 @@ async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
 
 
 @router.get("/api/edit", response_class=HTMLResponse)
-async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
+async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)):
     owner_id = backend.is_owner(session.id, id)
     editor = backend.fetch_editor(id)
 
@@ -100,7 +100,7 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.securit
 async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
                    data: Annotated[str, Form()], channel: Annotated[str, Form()],
                    editor: Annotated[int, Form()],
-                   session: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
+                   session: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)):
     # if id and not data and not name and not channel:
     #    return RedirectResponse(url="/api/edit/{0}".format(id))
     if not backend.is_owner(session.id, id) and not backend.is_editor(session.id, id):
@@ -117,7 +117,7 @@ async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
 
 
 @router.get("/api/delete", response_class=HTMLResponse)
-async def api_delete(id: int, session: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
+async def api_delete(id: int, session: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)):
     if not backend.is_owner(session.id, id):
         return HTMLResponse(status_code=403, content="Forbidden")
 

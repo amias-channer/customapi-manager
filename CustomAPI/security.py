@@ -28,7 +28,7 @@ def authenticate_user(request: Request, response: Response,
         return backend.fetch_user(login.user_id)
 
 
-def get_authenticated_user_from_session_id(request: Request):
+def is_loggedin_user(request: Request):
     session_id = request.cookies.get("session_id")
     user = backend.get_session_user(session_id)
     if not user:
@@ -40,7 +40,7 @@ def get_authenticated_user_from_session_id(request: Request):
 
 
 def is_admin_user(request: Request):
-    user = get_authenticated_user_from_session_id(request)
+    user = is_loggedin_user(request)
     if not user.admin:
         raise HTTPException(status_code=403, detail="Forbidden")
     return user

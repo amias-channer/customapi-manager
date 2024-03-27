@@ -59,8 +59,8 @@ head3 = """ [ <a href="/logout">Logout</a> ]
 """
 head = head1 + "You" + head2 + head3
 loginform = """
-<form action='/start' method='get'>
-    This is a private system , please ask Amias for a login.<br>
+<form action='/start' method='get'><br><br>
+    This is a private system , please ask Amias for a login.<br><br>
     <input type='submit' value='Login'>
 </form>"""
 foot = """<br><br><font size='-6'><a href="https://amias.net/">Amias Channer© 2024 </a></font></body></html>"""
