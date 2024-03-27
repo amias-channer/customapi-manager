@@ -70,6 +70,8 @@ class Backend:
 
     async def create_api(self, name: str, data: str, channel: str, uid: int, editor: int) -> int or False:
         try:
+            if editor == 0:
+                return False
             api = Api(name=name, data=data, channel=channel)
             self.db.add(api)
             self.db.commit()
@@ -162,6 +164,10 @@ class Backend:
 
     def fetch_api_list(self, id: int) -> list[Api]:
         apis = self.db.query(Owner).filter(Owner.user_id == id).all()
+        return apis
+
+    def fetch_shared_api_list(self, id: int) -> list[Api]:
+        apis = self.db.query(Editor).filter(Editor.user_id == id).all()
         return apis
 
     def fetch_login_list(self) -> list[Login]:

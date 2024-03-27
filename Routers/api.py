@@ -20,6 +20,12 @@ def api_form(action, method, id, name, data, channel, editor):
     <input type="hidden" name="id" value="{1}">
     <table>
     <tr><td align="right">Name</td><td><input size="20" name="name" value="{2}">
+
+    </td></tr>
+    <tr><td align="right">Data</td><td><textarea id="data" cols="43" rows="10" name="data">{3}</textarea></td></tr>
+    <tr><td align="right">Channel</td><td><input size="20" id="channel" name="channel" value="{4}">
+    <button type="button" onclick="clearChannel()" title="Add a channel name to make this API available to only one channel,
+     or click X to leave it open and get shorter link">X</button> 
     <span align="right">
     <button type="button" onclick="crToComma();return False" title="Replace the lines in the data with Commas">L</button>
     <button type="button" onclick="spacesToComma()" title="Replace the spaces in the data with Commas">S</button>
@@ -27,12 +33,8 @@ def api_form(action, method, id, name, data, channel, editor):
     <button type="button" onclick="noSingleQuotes()" title="Remove Single quotes from the data">'</button>
     <button type="button" onclick="noDoubleQuotes()" title="Remove Double quotes from the data">"</button>
     </span>
-    </td></tr>
-    <tr><td align="right">Data</td><td><textarea id="data" cols="38" rows="10" name="data">{3}</textarea></td></tr>
-    <tr><td align="right">Channel</td><td><input size="20" id="channel" name="channel" value="{4}">
-    <button type="button" onclick="clearChannel()" title="Add a channel name to make this API available to only one channel,
-     or click X to leave it open and get shorter link">X</button> <td></tr>
-    <tr><td align="right">Editor</td><td><select name='editor'><option value="0">No Editor</option>""".format(action, id, name, data, channel, method)
+     <td></tr>
+    <tr><td align="right">Shared With</td><td><select name='editor'><option value="0">Nobody</option>""".format(action, id, name, data, channel, method)
     for user in backend.fetch_user_list():
         if user.id == editor:
             form += """<option value="{0}" selected>{1}</option>""".format(user.id, user.name)
@@ -57,7 +59,7 @@ def generate_link_to_api(api_id, channel) -> str:
 
 @router.post("/api/create", response_class=HTMLResponse)
 async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
-                     channel: Annotated[str, Form()] | None = '', editor: Annotated[int, Form()] | None = 0,
+                     channel: Annotated[str, Form()], editor: Annotated[int, Form()],
                      login: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)
                      ):
     # name: str, data: str, channel: str,
@@ -77,7 +79,7 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.securit
     editor = backend.fetch_editor(id)
 
     if not owner_id == session.id:
-        if editor and not editor.id == session.id:
+        if editor and not editor.user_id == session.id:
             return HTMLResponse(status_code=403, content="Forbidden")
 
     api = backend.fetch_api(id)
@@ -96,8 +98,8 @@ async def api_edit(id: int, session: CustomAPI.Login = Depends(CustomAPI.securit
 
 @router.post("/api/edit", response_class=HTMLResponse)
 async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
-                   data: Annotated[str, Form()], channel: Annotated[str, Form(), None, ' '],
-                   editor: Annotated[int, Form(), None, 0],
+                   data: Annotated[str, Form()], channel: Annotated[str, Form()],
+                   editor: Annotated[int, Form()],
                    session: CustomAPI.Login = Depends(CustomAPI.security.get_authenticated_user_from_session_id)):
     # if id and not data and not name and not channel:
     #    return RedirectResponse(url="/api/edit/{0}".format(id))

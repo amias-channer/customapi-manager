@@ -11,7 +11,7 @@ security = HTTPBasic()
 
 
 def authenticate_user(request: Request, response: Response,
-                      credentials: HTTPBasicCredentials = Depends(security)) -> CustomAPI.Login or False:
+                      credentials: HTTPBasicCredentials = Depends(security)) -> CustomAPI.User or False:
     session_id = request.cookies.get("session_id")
     login = backend.login(credentials.username, credentials.password, session_id=session_id)
     if not login:
@@ -25,7 +25,7 @@ def authenticate_user(request: Request, response: Response,
         )
     else:
         response.set_cookie("session_id", login.session_id)
-        return login
+        return backend.fetch_user(login.user_id)
 
 
 def get_authenticated_user_from_session_id(request: Request):

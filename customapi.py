@@ -21,19 +21,34 @@ async def root():
 
 
 @app.get("/start", response_class=HTMLResponse)
-async def start(user: CustomAPI.Login = Depends(CustomAPI.security.authenticate_user)):
-    banner = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font size="+1">Welcome {}</font><br><br>""".format(
-        backend.get_user_name(user.user_id))
-    apilist = """<form method="get">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type="submit" formaction="/api/delete">Delete</button>"""
+async def start(user: CustomAPI.User = Depends(CustomAPI.security.authenticate_user)):
+    padding = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    banner = """{0}<font size="+1">Welcome {1}</font><br><br>""".format(padding, user.name)
+    apilist = """<form method="get">{0}<button type="submit" formaction="/api/delete">Delete</button>""".format(padding)
+    optlist = """&nbsp;&nbsp;<select name='id'>"""
+    for relation in backend.fetch_api_list(user.id):
+        api = backend.fetch_api(relation.api_id)
+        optlist += """<option value="{0}">{1}</option>""".format(api.id, api.name)
+    optlist += "</select>"
+    apilist += optlist
+    apilist += """</select>&nbsp;&nbsp;<button type="submit" formaction="/api/edit">Edit</button></form>"""
+    createform = api_form("create", "post", 0, "", "", "", 0)
+    return CustomAPI.template.header(user) + apilist + createform + foot
+
+
+@app.get("/shared", response_class=HTMLResponse)
+async def shared(user: CustomAPI.Login = Depends(CustomAPI.security.authenticate_user)):
+    padding = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    banner = """{0}<font size="+1">Welcome {1}</font><br><br>""".format(padding, user.name)
+    apilist = """<form method="get">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""
     optlist = """<select name='id'>"""
-    for relation in backend.fetch_api_list(user.user_id):
+    for relation in backend.fetch_shared_api_list(user.id):
         api = backend.fetch_api(relation.api_id)
         optlist += """<option value="{0}">{1}</option>""".format(api.id, api.name)
     optlist += "</select>"
     apilist += optlist
     apilist += """</select><button type="submit" formaction="/api/edit">Edit</button></form>"""
-    createform = api_form("create", "post", 0, "", "", "", 0)
-    return head + banner + apilist + createform + foot
+    return CustomAPI.template.header(user) + apilist + foot
 
 
 @app.get("/{i}", response_class=HTMLResponse)
