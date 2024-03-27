@@ -24,8 +24,23 @@ def authenticate_user(request: Request, response: Response,
             headers={"Authorization": "Basic"},
         )
     else:
+
         response.set_cookie("session_id", login.session_id)
         return backend.fetch_user(login.user_id)
+
+
+def logout_user(request: Request):
+    session_id = request.cookies.get("session_id")
+    if backend.logout(session_id):
+        response = RedirectResponse("/wipe_session")
+        response.headers["Authorization"] = "Basic"
+        response.set_cookie("session_id", "")
+        return response
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Logout failed",
+        )
 
 
 def is_loggedin_user(request: Request):
@@ -35,6 +50,7 @@ def is_loggedin_user(request: Request):
         raise HTTPException(
             status_code=401,
             detail="Invalid session ID",
+            headers={"Authorization": "Basic"},
         )
     return user
 

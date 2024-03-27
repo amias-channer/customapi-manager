@@ -1,6 +1,7 @@
 from fastapi import HTTPException, FastAPI, Depends, Header
 from fastapi.responses import HTMLResponse
-from fastapi.security import HTTPBasic
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from typing import Annotated
 
 import CustomAPI
 from Routers import user_router, api_router, api_form
@@ -21,7 +22,10 @@ async def root():
 
 
 @app.get("/start", response_class=HTMLResponse)
-async def start(user: CustomAPI.User = Depends(CustomAPI.security.authenticate_user)):
+async def start(
+        credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasic)],
+        user: Annotated[CustomAPI.User, Depends(CustomAPI.security.authenticate_user)],
+                ):
     padding = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
     banner = """{0}<font size="+1">Welcome {1}</font><br><br>""".format(padding, user.name)
     apilist = """<form method="get">{0}<button type="submit" formaction="/api/delete">Delete</button>""".format(padding)

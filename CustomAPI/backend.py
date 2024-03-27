@@ -176,6 +176,10 @@ class Backend:
         login = self.db.query(Login).filter(Login.session_id == session_id).first()
         return login
 
+    def fetch_user_session(self, user_id: int) -> Login:
+        login = self.db.query(Login).filter(Login.user_id == user_id).first()
+        return login
+
     def fetch_api(self, id: int) -> Api:
         api = self.db.query(Api).filter(Api.id == id).first()
         return api

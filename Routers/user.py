@@ -143,15 +143,5 @@ async def wipe_session(response: Response):
 
 
 @router.get("/logout", response_class=HTMLResponse)
-async def logout(request: Request, response: Response, credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasic)],
-                 user: CustomAPI.User = Depends(CustomAPI.security.is_loggedin_user)):
-    session_id = request.cookies.get("session_id")
-    if backend.logout(session_id):
-        credentials.username = None
-        credentials.password = None
-        response.set_cookie("session_id", "")
-        response.headers["Authorization"] = "None"
-        return HTMLResponse(content=head + "Logging out <br><br> <a href='/wipe_session'>Continue</a>",
-                            headers=response.headers)
-    else:
-        return head + "Error logging out" + foot
+async def logout(request: Request, response: Response, credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasic)],):
+    return CustomAPI.security.logout_user(request)
