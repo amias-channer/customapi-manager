@@ -10,7 +10,7 @@ class Api(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, index=True)
     data = Column(String, index=True)
-    channel = Column(String, index=True)
+    channel = Column(String, index=True, default="")
 
 
 class User(Base):

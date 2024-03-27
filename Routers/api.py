@@ -15,6 +15,9 @@ security = HTTPBasic()
 
 
 def api_form(action, method, id, name, data, channel, editor):
+    if channel == '':
+        channel = ' '
+
     form = """
     <form action="/api/{0}" method="{5}">
     <input type="hidden" name="id" value="{1}">
@@ -62,6 +65,8 @@ async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
                      channel: Annotated[str, Form()], editor: Annotated[int, Form()],
                      login: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)
                      ):
+    if channel == ' ':
+        channel = ''
     # name: str, data: str, channel: str,
     api_id = await backend.create_api(name, data, channel, login.id, editor)
     if api_id:

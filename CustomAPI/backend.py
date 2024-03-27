@@ -70,8 +70,6 @@ class Backend:
 
     async def create_api(self, name: str, data: str, channel: str, uid: int, editor: int) -> int or False:
         try:
-            if editor == 0:
-                return False
             api = Api(name=name, data=data, channel=channel)
             self.db.add(api)
             self.db.commit()
