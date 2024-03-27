@@ -67,6 +67,7 @@ foot = """<br><br><font size='-6'><a href="https://amias.net/">Amias Channer© 2
 
 
 def header(user: CustomAPI.User):
+    admin = ""
     if user.admin:
         admin = """[ <a href="/admin">Admin</a> ]"""
     return head1 + user.name + head2 + admin + head3
