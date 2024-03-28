@@ -27,9 +27,9 @@ async def api_form(action, method, id, name, data, channel, editor, delimiter=',
     <tr><td colspan="2"><textarea id="data" cols="56" rows="10" name="data">{3}</textarea></td></tr>
     <tr><td align="right">&nbsp;&nbsp;Delimiter</td><td><input id="delimiter" name="delimiter" size="20" value="{7}">
     <font size="-3">
-    <button type="button" onclick="crToDelimiter()";return false" title="Replace the lines in the data with Commas">L</button>
-    <button type="button" onclick="spacesToDelimiter()" title="Replace the spaces in the data with Commas">S</button>&nbsp;&nbsp;
-    <button type="button" onclick="noDupes()" title="Remove duplicated punctuation">D</button>
+    <button type="button" onclick="crToDelimiter()";return false" title="Replace the linebreaks in the data with delimiters">L</button>
+    <button type="button" onclick="spacesToDelimiter()" title="Replace the spaces in the data with delimiters">S</button>&nbsp;&nbsp;
+    <button type="button" onclick="noDupes()" title="Remove duplicated punctuation from the data">D</button>
     <button type="button" onclick="noSingleQuotes()" title="Remove Single quotes from the data">'</button>
     <button type="button" onclick="noDoubleQuotes()" title="Remove Double quotes from the data">"</button>
     </font>
