@@ -49,7 +49,7 @@ async def api_form(action, method, id, name, data, channel, editor, delimiter=',
     return form
 
 
-def generate_link_to_api(api_id, channel) -> str:
+async def generate_link_to_api(api_id, channel) -> str:
 
     opening_string = '${customapi.api.amias.net'
     closing_string = '}'
