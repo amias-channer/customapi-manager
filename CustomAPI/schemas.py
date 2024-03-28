@@ -6,6 +6,7 @@ class API(BaseModel):
     name: str
     data: str
     channel: str
+    delimiter: str
 
     class Config:
         orm_mode = True

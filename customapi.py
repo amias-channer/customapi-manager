@@ -26,8 +26,7 @@ async def start(
         credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasic)],
         user: Annotated[CustomAPI.User, Depends(CustomAPI.security.authenticate_user)],
                 ):
-    padding = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-    banner = """{0}<font size="+1">Welcome {1}</font><br><br>""".format(padding, user.name)
+    padding = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
     apilist = """<form method="get">{0}<button type="submit" formaction="/api/delete">Delete</button>""".format(padding)
     optlist = """&nbsp;&nbsp;<select name='id'>"""
     for relation in backend.fetch_api_list(user.id):
@@ -35,7 +34,7 @@ async def start(
         optlist += """<option value="{0}">{1}</option>""".format(api.id, api.name)
     optlist += "</select>"
     apilist += optlist
-    apilist += """</select>&nbsp;&nbsp;<button type="submit" formaction="/api/edit">Edit</button></form>"""
+    apilist += """</select>&nbsp;&nbsp;<button type="submit" formaction="/api/edit">Edit</button></form><br>"""
     createform = api_form("create", "post", 0, "", "", "", 0)
     return CustomAPI.template.header(user) + apilist + createform + foot
 
@@ -59,7 +58,7 @@ async def shared(user: CustomAPI.Login = Depends(CustomAPI.security.authenticate
 def shortcut(i: int, c: str or None = None, http_x_streamelements_channel: str | None = Header(default=None)):
     api = backend.fetch_api(i)
     import random
-    out = random.choice(api.data.split(","))
+    out = random.choice(api.data.split(api.delimiter))
     if api.channel:
         if http_x_streamelements_channel != api.channel:
             return HTMLResponse(status_code=403, content="Incorrect Channel in Header")

@@ -68,9 +68,9 @@ class Backend:
         except:
             return False
 
-    async def create_api(self, name: str, data: str, channel: str, uid: int, editor: int) -> int or False:
+    async def create_api(self, name: str, data: str, channel: str, uid: int, editor: int, delimiter: str) -> int or False:
         try:
-            api = Api(name=name, data=data, channel=channel)
+            api = Api(name=name, data=data, channel=channel, delimiter=delimiter)
             self.db.add(api)
             self.db.commit()
             owner = Owner(user_id=uid, api_id=api.id)
@@ -94,13 +94,15 @@ class Backend:
         except:
             return False
 
-    def edit_api(self, id: int, name: str, data: str, channel: str, editor: str) -> bool:
+    def edit_api(self, id: int, name: str, data: str, channel: str, editor: str, delimiter: str) -> bool:
         try:
             api = self.db.query(Api).filter(Api.id == id).first()
             if name and name != api.name:
                 api.name = name
             if data and data != api.data:
                 api.data = data
+            if delimiter and delimiter != api.delimiter:
+                api.delimiter = delimiter
             api.channel = channel
             self.db.commit()
             if editor and editor != id:

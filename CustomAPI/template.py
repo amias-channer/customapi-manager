@@ -5,6 +5,7 @@ double_quote = '''"'''
 single_quote = "'"
 
 head1 = """
+<!DOCTYPE html>
 <html>
 <head>
 <style>
@@ -14,31 +15,34 @@ body {
 }
 </style>
 <script>
-function crToComma(){
-	var textarea = document.getElementById('data');
-    var content = textarea.value.replace(/(""" + regex + """)/gm, ',');
-	textarea.value = content;
-}
-
-function spacesToComma(){
-	var textarea = document.getElementById('data'); 
-    var content = textarea.value.replace(/(\s)/gm, ','); 
+function crToDelimiter(){
+    var textarea = document.getElementById('data');
+    var delimiter = document.getElementById('delimiter');
+    var content = textarea.value.replace(/(""" + regex + """)/gm, delimiter.value);
     textarea.value = content;
 }
+
+function spacesToDelimiter(){
+    var textarea = document.getElementById('data'); 
+    var delimiter = document.getElementById('delimiter');
+    var content = textarea.value.replace(/(\s)/gm, delimiter.value); 
+    textarea.value = content;
+}
+
 function noSingleQuotes(){
-	var textarea = document.getElementById('data'); 
+    var textarea = document.getElementById('data'); 
     var content = textarea.value.replace(/(""" + single_quote + """)/gm, ''); 
     textarea.value = content;
 }
 
 function noDoubleQuotes(){
-	var textarea = document.getElementById('data'); 
+    var textarea = document.getElementById('data'); 
     var content = textarea.value.replace(/(""" + double_quote + """)/gm, ''); 
     textarea.value = content;
 }
 
 function noDupes(){
-	var textarea = document.getElementById('data'); 
+    var textarea = document.getElementById('data'); 
     var content = textarea.value.replace(/(\W{2,})/gm, ''); 
     textarea.value = content;
 }
@@ -57,7 +61,7 @@ head3 = """ [ <a href="/logout">Logout</a> ]
 </font>
 <br><br>
 """
-head = head1 + "You" + head2 + head3
+head = head1 + "You </a> " + head3
 loginform = """
 <form action='/start' method='get'><br><br>
     This is a private system , please ask Amias for a login.<br><br>
