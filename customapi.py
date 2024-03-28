@@ -1,5 +1,5 @@
 from fastapi import HTTPException, FastAPI, Depends, Header
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from typing import Annotated
 
@@ -14,6 +14,13 @@ app.include_router(api_router)
 
 backend = CustomAPI.Backend()
 security = HTTPBasic()
+
+favicon_path = 'favicon.ico'
+
+
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse(favicon_path)
 
 
 @app.get("/", response_class=HTMLResponse)

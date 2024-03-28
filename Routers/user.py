@@ -26,6 +26,7 @@ def admin(login: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
     </select>
     <button type="submit" formaction="/user/edit">Edit</button>    
     </form>
+    <br>
     <form method="post" action="/user/create">
     <table>
     <tr><td>User Name</td><td><input name="name"></td></tr>
@@ -33,6 +34,7 @@ def admin(login: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
     <tr><td colspan="2"><input type="submit" value="Create User"></td></tr>
     </table>
     </form>
+    <br>
     <table>
     """
     for fetched_login in backend.fetch_login_list():
