@@ -82,11 +82,12 @@ This is a Fastapi app so you will need to install the requirements in requiremen
 pip install -r requirements.txt
 ```
 The database will be auto created when you run the app for the first time.
-Run this line of SQL to create your first admin user.
+Use the sqlite3 command to run this line of SQL which will create your admin user.
 ```
+sqlite3 customapi.db
 insert into users (name, password, enabled, admin) values ('root', 'change this password', 1, 1);
 ```
-
+The rest can be done in via the admin page.
 
 The server runs on localhost 8000,  you should setup a proxy to serve to the wider internet.
 
