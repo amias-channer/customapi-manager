@@ -36,13 +36,13 @@ async def start(
     padding = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
     apilist = """<form method="get">{0}<button type="submit" formaction="/api/delete">Delete</button>""".format(padding)
     optlist = """&nbsp;&nbsp;<select name='id'>"""
-    for relation in backend.fetch_api_list(user.id):
-        api = backend.fetch_api(relation.api_id)
+    for relation in await backend.fetch_api_list(user.id):
+        api = await backend.fetch_api(relation.api_id)
         optlist += """<option value="{0}">{1}</option>""".format(api.id, api.name)
     optlist += "</select>"
     apilist += optlist
     apilist += """</select>&nbsp;&nbsp;<button type="submit" formaction="/api/edit">Edit</button></form><br>"""
-    createform = api_form("create", "post", 0, "", "", "", 0)
+    createform = await api_form("create", "post", 0, "", "", "", 0)
     return CustomAPI.template.header(user) + apilist + createform + foot
 
 
@@ -52,8 +52,8 @@ async def shared(user: CustomAPI.Login = Depends(CustomAPI.security.authenticate
     banner = """{0}<font size="+1">Welcome {1}</font><br><br>""".format(padding, user.name)
     apilist = """<form method="get">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"""
     optlist = """<select name='id'>"""
-    for relation in backend.fetch_shared_api_list(user.id):
-        api = backend.fetch_api(relation.api_id)
+    for relation in await backend.fetch_shared_api_list(user.id):
+        api = await backend.fetch_api(relation.api_id)
         optlist += """<option value="{0}">{1}</option>""".format(api.id, api.name)
     optlist += "</select>"
     apilist += optlist
@@ -62,8 +62,8 @@ async def shared(user: CustomAPI.Login = Depends(CustomAPI.security.authenticate
 
 
 @app.get("/{i}", response_class=HTMLResponse)
-def shortcut(i: int, c: str or None = None, http_x_streamelements_channel: str | None = Header(default=None)):
-    api = backend.fetch_api(i)
+async def shortcut(i: int, c: str or None = None, http_x_streamelements_channel: str | None = Header(default=None)):
+    api = await backend.fetch_api(i)
     import random
     out = random.choice(api.data.split(api.delimiter))
     if api.channel:
@@ -76,8 +76,8 @@ def shortcut(i: int, c: str or None = None, http_x_streamelements_channel: str |
 
 
 @app.get("/n/{n}", response_class=HTMLResponse)
-def name(n: str, r: int or None = None):
-    data = backend.fetch_api_by_name(n)
+async def name(n: str, r: int or None = None):
+    data = await backend.fetch_api_by_name(n)
     if data:
         out = data.data
         if r == 1:
@@ -89,7 +89,7 @@ def name(n: str, r: int or None = None):
 
 @app.get("/r/{i}/{c}", response_model=None)
 @app.get("/random/{i}/{c}", response_model=None)
-def random(i: int, c: str, r: int = 1,
+async def random(i: int, c: str, r: int = 1,
            user_agent: str | None = Header(default=None),
            http_x_streamelements_channel: str | None = Header(default=None)):
     return api(i, c, r, user_agent, http_x_streamelements_channel)
@@ -97,7 +97,7 @@ def random(i: int, c: str, r: int = 1,
 
 @app.get("/a/{i}/{c}", response_model=None)
 @app.get("/api/{i}/{c}", response_model=None)
-def api(i: int, c: str, r: int or None = None,
+async def api(i: int, c: str, r: int or None = None,
         user_agent: str | None = Header(default=None),
         http_x_streamelements_channel: str | None = Header(default=None)):
     # check headers

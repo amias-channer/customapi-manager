@@ -14,7 +14,7 @@ backend = CustomAPI.Backend()
 security = HTTPBasic()
 
 
-def api_form(action, method, id, name, data, channel, editor, delimiter=','):
+async def api_form(action, method, id, name, data, channel, editor, delimiter=','):
     if channel == '':
         channel = ' '
     regex = '\\r\\n|\\n|\\r'
@@ -28,7 +28,7 @@ def api_form(action, method, id, name, data, channel, editor, delimiter=','):
     <tr><td align="right">&nbsp;&nbsp;Delimiter</td><td><input id="delimiter" name="delimiter" size="20" value="{7}">
     <font size="-3">
     <button type="button" onclick="crToDelimiter()";return false" title="Replace the lines in the data with Commas">L</button>
-    <button type="button" onclick="spacesToDelimiter()" title="Replace the spaces in the data with Commas">S</button>
+    <button type="button" onclick="spacesToDelimiter()" title="Replace the spaces in the data with Commas">S</button>&nbsp;&nbsp;
     <button type="button" onclick="noDupes()" title="Remove duplicated punctuation">D</button>
     <button type="button" onclick="noSingleQuotes()" title="Remove Single quotes from the data">'</button>
     <button type="button" onclick="noDoubleQuotes()" title="Remove Double quotes from the data">"</button>
@@ -39,7 +39,7 @@ def api_form(action, method, id, name, data, channel, editor, delimiter=','):
      or click X to leave it open and get shorter link">X</button></td><tr>
     <tr><td align="right">Editor</td><td><select name='editor'><option value="0">Nobody</option>"""\
         .format(action, id, name, data, channel, method, regex, delimiter)
-    for user in backend.fetch_user_list():
+    for user in await backend.fetch_user_list():
         if user.id == editor:
             form += """<option value="{0}" selected>{1}</option>""".format(user.id, user.name)
         else:
@@ -71,7 +71,8 @@ async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
     api_id = await backend.create_api(name, data, channel, user.id, editor, delimiter)
     if api_id:
         se_command = generate_link_to_api(api_id, channel)
-        out = "created {0} successfully <br><br> {1} <br><br>".format(api_id, se_command)
+        trylink = """<a href="/{0}">{0}</a>""".format(api_id)
+        out = "created {0} successfully <br><br> {1} <br><br>".format(trylink, se_command)
         return HTMLResponse(status_code=200,
                             content=CustomAPI.template.header(user) + out + CustomAPI.template.foot)
     else:
@@ -80,14 +81,14 @@ async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
 
 @router.get("/api/edit", response_class=HTMLResponse)
 async def api_edit(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is_loggedin_user)):
-    owner = backend.is_owner(user.id, id)
-    editor = backend.is_editor(user.id, id)
+    owner = await backend.is_owner(user.id, id)
+    editor = await backend.is_editor(user.id, id)
 
     if not owner:
         if not editor:
             return HTMLResponse(status_code=403, content=CustomAPI.template.header(user) + "Forbidden" + CustomAPI.template.foot)
 
-    api = backend.fetch_api(id)
+    api = await backend.fetch_api(id)
     link = '<font size="+3">' + generate_link_to_api(api.id, api.channel) + "<br></font>"
     if editor:
         editor_id = user.id
@@ -96,7 +97,7 @@ async def api_edit(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is
     # the default value in the form is space because the form will send a None if its truly empty.
     if api.channel == '':
         api.channel = ' '
-    editform = api_form("edit", "post", api.id, api.name, api.data, api.channel, editor_id, api.delimiter)
+    editform = await api_form("edit", "post", api.id, api.name, api.data, api.channel, editor_id, api.delimiter)
     editform = "<br>" + editform
     return HTMLResponse(status_code=200, content=CustomAPI.template.header(user) + link + editform + CustomAPI.template.foot)
 
@@ -108,13 +109,13 @@ async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
                    user: CustomAPI.User = Depends(CustomAPI.security.is_loggedin_user)):
     # if id and not data and not name and not channel:
     #    return RedirectResponse(url="/api/edit/{0}".format(id))
-    if not backend.is_owner(user.id, id) and not backend.is_editor(user.id, id):
+    if not await backend.is_owner(user.id, id) and not backend.is_editor(user.id, id):
         return HTMLResponse(status_code=403, content="Forbidden")
     # id: int,  name: str or None, data: str or None, channel: str or None,
     if channel == ' ':
         channel = ''
-    if backend.edit_api(id, name, data, channel, editor, delimiter):
-        link = generate_link_to_api(id, channel)
+    if await backend.edit_api(id, name, data, channel, editor, delimiter):
+        link = await generate_link_to_api(id, channel)
         ret = """<br> <a href="/api/edit?id={0}">edit</a>ed <a href="/{0}">{0}</a> successfully <br><br> {1} <br><br> """.format(id, link)
         return HTMLResponse(status_code=200, content=CustomAPI.template.header(user) + ret + CustomAPI.template.foot)
     else:
@@ -123,7 +124,7 @@ async def api_edit(id: Annotated[int, Form()], name: Annotated[str, Form()],
 
 @router.get("/api/delete", response_class=HTMLResponse)
 async def api_delete(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is_loggedin_user)):
-    if not backend.is_owner(user.id, id):
+    if not await backend.is_owner(user.id, id):
         return HTMLResponse(status_code=403, content="Forbidden")
 
     if await backend.delete_api(id):

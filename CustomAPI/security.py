@@ -10,10 +10,10 @@ backend = CustomAPI.Backend()
 security = HTTPBasic()
 
 
-def authenticate_user(request: Request, response: Response,
+async def authenticate_user(request: Request, response: Response,
                       credentials: HTTPBasicCredentials = Depends(security)) -> CustomAPI.User or False:
     session_id = request.cookies.get("session_id")
-    login = backend.login(credentials.username, credentials.password, session_id=session_id)
+    login = await backend.login(credentials.username, credentials.password, session_id=session_id)
     if not login:
         credentials.username = None
         credentials.password = None
@@ -26,12 +26,12 @@ def authenticate_user(request: Request, response: Response,
     else:
 
         response.set_cookie("session_id", login.session_id)
-        return backend.fetch_user(login.user_id)
+        return await backend.fetch_user(login.user_id)
 
 
-def logout_user(request: Request):
+async def logout_user(request: Request):
     session_id = request.cookies.get("session_id")
-    if backend.logout(session_id):
+    if await backend.logout(session_id):
         response = RedirectResponse("/wipe_session")
         response.headers["Authorization"] = "Basic"
         response.set_cookie("session_id", "")
@@ -43,9 +43,9 @@ def logout_user(request: Request):
         )
 
 
-def is_loggedin_user(request: Request):
+async def is_loggedin_user(request: Request):
     session_id = request.cookies.get("session_id")
-    user = backend.get_session_user(session_id)
+    user = await backend.get_session_user(session_id)
     if not user:
         raise HTTPException(
             status_code=401,
@@ -55,8 +55,8 @@ def is_loggedin_user(request: Request):
     return user
 
 
-def is_admin_user(request: Request):
-    user = is_loggedin_user(request)
+async def is_admin_user(request: Request):
+    user = await is_loggedin_user(request)
     if not user.admin:
         raise HTTPException(status_code=403, detail="Forbidden")
     return user

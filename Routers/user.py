@@ -15,12 +15,12 @@ backend = CustomAPI.Backend()
 
 
 @router.get("/admin", response_class=HTMLResponse)
-def admin(login: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
+async def admin(login: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
     output = """ <form method="get">
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <button type="submit" formaction="/user/delete">Delete</button>
     <select name='id'>"""
-    for user in backend.fetch_user_list():
+    for user in await backend.fetch_user_list():
         output += """<option value="{0}">{1}</option>""".format(user.id, user.name)
     output += """
     </select>
@@ -37,16 +37,16 @@ def admin(login: CustomAPI.Login = Depends(CustomAPI.security.is_admin_user)):
     <br>
     <table>
     """
-    for fetched_login in backend.fetch_login_list():
-        name = backend.get_user_name(fetched_login.user_id)
+    for fetched_login in await backend.fetch_login_list():
+        name = await backend.get_user_name(fetched_login.user_id)
         output += "<tr><td>{}</td><td>{}</td></tr>".format(name, fetched_login.session_id)
     output += "</table><br><br>"
     return HTMLResponse(status_code=200, content=CustomAPI.template.header(login) + output + foot)
 
 
 @router.get("/user", response_class=HTMLResponse)
-def user(login: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)):
-    user = backend.fetch_user(login.id)
+async def user(login: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)):
+    user = await backend.fetch_user(login.id)
     output = """
     <form action="/user/edit" method="post">
     <table>
@@ -58,8 +58,8 @@ def user(login: CustomAPI.Login = Depends(CustomAPI.security.is_loggedin_user)):
 
 
 @router.get("/user/edit", response_class=HTMLResponse)
-def edit_user(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is_admin_user)):
-    fetched_user = backend.fetch_user(id)
+async def edit_user(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is_admin_user)):
+    fetched_user = await backend.fetch_user(id)
     output = """
     <form action="/user/edit" method="post">
     <table>
@@ -88,8 +88,8 @@ def edit_user(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is_admi
     <form method="get" action="/api/edit">
     <select name='id'>"""
     apioutput = ''
-    for relation in backend.fetch_api_list(id):
-        api = backend.fetch_api(relation.api_id)
+    for relation in await backend.fetch_api_list(id):
+        api = await backend.fetch_api(relation.api_id)
         apioutput += """<option value="{0}">{1}</option>""".format(api.id, api.name)
     output += apioutput + "</select>"
     output += """<input type="submit" value="edit"></select></form><br><br>"""
@@ -98,10 +98,10 @@ def edit_user(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is_admi
 
 
 @router.post("/user/edit", response_model=None)
-def edit_user(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, password: Annotated[str, Form()],
+async def edit_user(id: Annotated[int, Form()], name: Annotated[str, Form()] or None, password: Annotated[str, Form()],
               enabled: Annotated[bool, Form()] or None, admin: Annotated[bool, Form()] or None,
               user: CustomAPI.User = Depends(CustomAPI.security.is_admin_user)):
-    if backend.edit_user(id, name, password, enabled, admin):
+    if await backend.edit_user(id, name, password, enabled, admin):
         return HTMLResponse(status_code=200, content=CustomAPI.template.header(user) + "Edited {0} successfully <br> {1}".format(name, foot))
     else:
         return HTTPException(status_code=500, detail="Internal server error")
