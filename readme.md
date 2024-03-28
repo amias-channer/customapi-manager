@@ -70,7 +70,7 @@ Data is stored in a SQLite 3 file in these tables
     logins: user_id, session_id 
 
 You can just supply a different connect string in database.py and SQLALchemy
-will use that an rebuild the database, SQL ALchmey is very nice.
+will use that an rebuild the database, SQL ALchemy is very nice.
 
 If you mess up you can just remove customapi.db and restart the app.
 
