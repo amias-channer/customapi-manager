@@ -70,7 +70,7 @@ async def api_create(name: Annotated[str, Form()], data: Annotated[str, Form()],
     # name: str, data: str, channel: str,
     api_id = await backend.create_api(name, data, channel, user.id, editor, delimiter)
     if api_id:
-        se_command = generate_link_to_api(api_id, channel)
+        se_command = await generate_link_to_api(api_id, channel)
         trylink = """<a href="/{0}">{0}</a>""".format(api_id)
         out = "created {0} successfully <br><br> {1} <br><br>".format(trylink, se_command)
         return HTMLResponse(status_code=200,
@@ -89,7 +89,7 @@ async def api_edit(id: int, user: CustomAPI.User = Depends(CustomAPI.security.is
             return HTMLResponse(status_code=403, content=CustomAPI.template.header(user) + "Forbidden" + CustomAPI.template.foot)
 
     api = await backend.fetch_api(id)
-    link = '<font size="+3">' + generate_link_to_api(api.id, api.channel) + "<br></font>"
+    link = '<font size="+3">' + await generate_link_to_api(api.id, api.channel) + "<br></font>"
     if editor:
         editor_id = user.id
     else:
