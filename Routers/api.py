@@ -26,19 +26,26 @@ async def api_form(action, method, id, name, data, channel, editor, delimiter=',
     <tr><td align="right">Name</td><td><input size="38" name="name" value="{2}"></td></tr>
     <tr><td colspan="2"><textarea id="data" cols="56" rows="10" name="data">{3}</textarea></td></tr>
     <tr><td align="right">&nbsp;&nbsp;Delimiter</td><td><input id="delimiter" name="delimiter" size="20" value="{7}">
-    <font size="-3">
-    <button type="button" onclick="crToDelimiter()";return false" title="Replace the linebreaks in the data with delimiters">L</button>
-    <button type="button" onclick="spacesToDelimiter()" title="Replace the spaces in the data with delimiters">S</button>&nbsp;&nbsp;
-    <button type="button" onclick="noDupes()" title="Remove duplicated punctuation from the data">D</button>
-    <button type="button" onclick="noSingleQuotes()" title="Remove Single quotes from the data">'</button>
-    <button type="button" onclick="noDoubleQuotes()" title="Remove Double quotes from the data">"</button>
+    <font size="-4">
+    <button type="button" onclick="toggleReplacementsMenu()" title="Show/Hide the replacements menu">*</button>
+    <div id="replacements" style="display:none">
+        <button type="button" onclick="crToDelimiter()";return false" title="Replace the linebreaks in the data with delimiters">L</button>
+        <button type="button" onclick="removeCharacters('spaces')" title="Replace the spaces in the data with delimiters">S</button>
+        <button type="button" onclick="removeCharacters('dupes','')" title="Remove duplicated punctuation from the data">D</button>
+        <button type="button" onclick="removeCharacters('single_quotes','')" title="Remove single quotes from the data">'</button>
+        <button type="button" onclick="removeCharacters('double_quotes','')" title="Remove double quotes from the data">"</button>
+        <button type="button" onclick="removeCharacters('parentheses','')" title="Remove parentheses from the data">{8}</button>
+        <button type="button" onclick="removeCharacters('brackets','')" title="Remove brackets from the data">(</button>
+        <button type="button" onclick="removeCharacters('angle','')" title="Remove angle brackets from the data"><</button>
+        <button type="button" onclick="removeCharacters('square','')" title="Remove square brackets from the data">[</button>
+    </div>
     </font>
      <td></tr>
     <tr><td align="right">Channel</td><td><input size="17" id="channel" name="channel" value="{4}">    
     <button type="button" onclick="clearChannel()" title="Add a channel name to make this API available to only one channel,
      or click X to leave it open and get shorter link">X</button></td><tr>
     <tr><td align="right">Editor</td><td><select name='editor'><option value="0">Nobody</option>"""\
-        .format(action, id, name, data, channel, method, regex, delimiter)
+        .format(action, id, name, data, channel, method, regex, delimiter, "{")
     for user in await backend.fetch_user_list():
         if user.id == editor:
             form += """<option value="{0}" selected>{1}</option>""".format(user.id, user.name)

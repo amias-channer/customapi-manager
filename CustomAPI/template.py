@@ -29,21 +29,32 @@ function spacesToDelimiter(){
     textarea.value = content;
 }
 
-function noSingleQuotes(){
-    var textarea = document.getElementById('data'); 
-    var content = textarea.value.replace(/(""" + single_quote + """)/gm, ''); 
-    textarea.value = content;
+function toggleReplacementsMenu(){
+    var menu = document.getElementById('replacements');
+    if (menu.style.display == 'none'){
+        menu.style.display = 'inline';        
+    } else {
+        menu.style.display = 'none';
+    }
 }
 
-function noDoubleQuotes(){
-    var textarea = document.getElementById('data'); 
-    var content = textarea.value.replace(/(""" + double_quote + """)/gm, ''); 
-    textarea.value = content;
-}
-
-function noDupes(){
-    var textarea = document.getElementById('data'); 
-    var content = textarea.value.replace(/(\W{2,})/gm, ''); 
+function removeCharacters(option, replacement){
+    if ( replacement == undefined ) {
+        replacement = document.getElementById('delimiter').value;
+    }
+    const options = new Map();
+    options.set('cr', '""" + regex + """');
+    options.set('spaces', "\s");
+    options.set('single_quotes', ",");
+    options.set('double_quotes', ",");
+    options.set('parentheses', "[\{|\}]");
+    options.set('brackets', "[\(|\)]");
+    options.set('square', "[\[|\]]");
+    options.set('angle', "[\<|\>]");
+    options.set('dupes', "(\W)\2+");
+    regex = new RegExp(options.get(option), 'gm');
+    var textarea = document.getElementById('data');
+    var content = textarea.value.replace(regex, replacement);
     textarea.value = content;
 }
 
