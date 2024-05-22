@@ -146,4 +146,4 @@ async def wipe_session(response: Response):
 
 @router.get("/logout", response_class=HTMLResponse)
 async def logout(request: Request, response: Response, credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasic)],):
-    return CustomAPI.security.logout_user(request)
+    CustomAPI.security.logout_user(request)
